@@ -20,7 +20,11 @@ module.exports = function publicEncrypt (publicKey, msg, reverse) {
   var key = parseKeys(publicKey)
   var paddedMsg
   if (padding === 4) {
-    paddedMsg = oaep(key, msg)
+    var oaepHash = 'sha1'
+    if (publicKey.oaepHash) {
+      oaepHash = publicKey.oaepHash
+    }
+    paddedMsg = oaep(key, msg, oaepHash)
   } else if (padding === 1) {
     paddedMsg = pkcs1(key, msg, reverse)
   } else if (padding === 3) {
@@ -38,10 +42,10 @@ module.exports = function publicEncrypt (publicKey, msg, reverse) {
   }
 }
 
-function oaep (key, msg) {
+function oaep (key, msg, oaepHash) {
   var k = key.modulus.byteLength()
   var mLen = msg.length
-  var iHash = createHash('sha1').update(Buffer.alloc(0)).digest()
+  var iHash = createHash(oaepHash).update(Buffer.alloc(0)).digest()
   var hLen = iHash.length
   var hLen2 = 2 * hLen
   if (mLen > k - hLen2 - 2) {
